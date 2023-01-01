@@ -4,12 +4,25 @@ import ssd1306
 import dht
 import time
 
+
+def reads():
+    senable = None
+    with open('settings.fos', 'r') as f:
+        lines = f.readlines()
+        for i, line in enumerate(lines):
+            if line.startswith('478325'):
+                for i in line:
+                    senable = line[6]
+        f.seek(0)
+    return senable
+
+senable = int(reads())
+
 led = Pin(25, Pin.OUT)
 pot = ADC(Pin(26, Pin.IN))
 but = Pin(10, Pin.IN, Pin.PULL_DOWN)
 sound = PWM(Pin(20))
 bot = 0
-senable = 1
 
 
 def clockcyc():
@@ -121,6 +134,15 @@ class Program:
             self.potval = int(int(int(pot.read_u16()) / 4096) / 2)
             self.butstate = but.value()
             Pin(25).low()
+            with open('settings.fos', 'r+') as f:
+                lines = f.readlines()
+                for i, line in enumerate(lines):
+                    if line.startswith('478325'):
+                        lines[i] = "478325" + str(int(senable))
+                f.seek(0)
+                for line in lines:
+                    f.write(line)
+            print(senable)
             try:
                 self.manager()
             except OSError:
@@ -161,6 +183,21 @@ class Program:
             self.oled.show()
             senable = 0
 
+    def ledsettings(self):
+        pass
+
+    def motor(self):
+        pass
+
+    def relay(self):
+        pass
+
+    def led(self):
+        pass
+
+    def sound(self):
+        pass
+
     def box(self):
         self.oled.fill(0)
 
@@ -200,7 +237,7 @@ class Program:
             if self.select == 0:
                 if self.potval == 0:
                     if self.butstate == 1:
-                        self.select = 2
+                        self.select = 1
                         playtone(600)
                         time.sleep(0.1)
                         sound.duty_u16(0)
@@ -217,7 +254,7 @@ class Program:
 
                 elif self.potval == 1:
                     if self.butstate == 1:
-                        self.select = 1
+                        self.select = 2
                         playtone(600)
                         time.sleep(0.1)
                         sound.duty_u16(0)
@@ -233,13 +270,111 @@ class Program:
                         playtone(500)
                         time.sleep(0.1)
                         sound.duty_u16(0)
+                elif self.potval == 2:
+                    if self.butstate == 1:
+                        self.select = 3
+                        playtone(600)
+                        time.sleep(0.1)
+                        sound.duty_u16(0)
+                        self.ledsettings()
+
+                    self.box()
+                    text("LED Settings", 10, 26)
+                    self.oled.show()
+                    if self.potval != self.potvalb:
+                        self.potvalb = self.potval
+                        playtone(500)
+                        time.sleep(0.1)
+                        sound.duty_u16(0)
+
+                elif self.potval == 3:
+                    if self.butstate == 1:
+                        self.select = 4
+                        playtone(600)
+                        time.sleep(0.1)
+                        sound.duty_u16(0)
+                        self.motor()
+
+                    self.box()
+                    text("Motor", 15, 10)
+                    self.oled.show()
+                    if self.potval != self.potvalb:
+                        self.potvalb = self.potval
+                        playtone(500)
+                        time.sleep(0.1)
+                        sound.duty_u16(0)
+
+                elif self.potval == 4:
+                    if self.butstate == 1:
+                        self.select = 5
+                        playtone(600)
+                        time.sleep(0.1)
+                        sound.duty_u16(0)
+                        self.relay()
+
+                    self.box()
+                    text("Relay", 15, 10)
+                    self.oled.show()
+                    if self.potval != self.potvalb:
+                        self.potvalb = self.potval
+                        playtone(500)
+                        time.sleep(0.1)
+                        sound.duty_u16(0)
+
+                elif self.potval == 5:
+                    if self.butstate == 1:
+                        self.select = 6
+                        playtone(600)
+                        time.sleep(0.1)
+                        sound.duty_u16(0)
+                        self.relay()
+
+                    self.box()
+                    text("LED", 15, 10)
+                    self.oled.show()
+                    if self.potval != self.potvalb:
+                        self.potvalb = self.potval
+                        playtone(500)
+                        time.sleep(0.1)
+                        sound.duty_u16(0)
+
+                elif self.potval == 6:
+                    if self.butstate == 1:
+                        self.select = 7
+                        playtone(600)
+                        time.sleep(0.1)
+                        sound.duty_u16(0)
+                        self.relay()
+
+                    self.box()
+                    text("Sound", 15, 10)
+                    self.oled.show()
+                    if self.potval != self.potvalb:
+                        self.potvalb = self.potval
+                        playtone(500)
+                        time.sleep(0.1)
+                        sound.duty_u16(0)
+
                 else:
                     self.oled.fill(0)
+                    text("How did you", 5, 15)
+                    text("even get here?", 5, 24)
                     self.oled.show()
+
             elif self.select == 1:
-                self.temp_hum()
-            elif self.select == 2:
                 self.settings()
+            elif self.select == 2:
+                self.temp_hum()
+            elif self.select == 3:
+                self.ledsettings()
+            elif self.select == 4:
+                self.motor()
+            elif self.select == 5:
+                self.relay()
+            elif self.select == 6:
+                self.led()
+            elif self.select == 7:
+                self.sound()
         except OSError:
             oserror()
 
@@ -296,7 +431,7 @@ class Program:
         text("__", 89, 28)
 
         text("OS", 74, 45)
-        text("a0.1.1", 0, 56)
+        text("a0.2.1", 0, 56)
         self.oled.show()
 
 
